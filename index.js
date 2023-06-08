@@ -44,35 +44,29 @@ app.get(`/${xembee}/getSensors/:userId`, (req, res) => {
     const userId = req.params.userId;
     console.log(userId);
 
-
-
     client.query('SELECT module.* FROM module WHERE module.userid = $1', [userId], (error, results) => {
         if (error) {
             console.error('Erreur lors de la récupération des capteurs :', error);
             res.status(500).send('Erreur lors de la récupération des capteurs');
         } else {
             console.log(results.rows);
-
-
-
             const modules = results.rows.map(async (row) => {
                 try {
                     const composantResult = await client.query('SELECT composant.* from composant WHERE composant."idModule" = $1', [row.id]);
                     console.log(composantResult.rows);
-
-
-
                     const composants = composantResult.rows.map(async (compo) => {
                         try {
                             const statistiqueResult = await client.query('SELECT statistiques.* from statistiques WHERE statistiques."idComposant" = $1', [compo.id]);
+                            const typeResult = await client.query('SELECT type.* from type WHERE type.id = $1', [compo.typeid]);
                             console.log(statistiqueResult.rows);
-
-
 
                             const composant = {
                                 id: compo.id,
                                 typeid: compo.typeid,
                                 numserie: compo.numserie,
+                                type: typeResult.rows.map((t) => ({
+                                    name: t.label
+                                })),
                                 statistiques: statistiqueResult.rows.map((stat) => ({
                                     id: stat.id,
                                     date: stat.date,
