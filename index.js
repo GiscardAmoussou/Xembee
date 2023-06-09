@@ -24,10 +24,43 @@ client.connect()
         console.error('Error connecting to PostgreSQL:', err);
     });
 
-// Test affichage données dans la BD
-app.get(`/${xembee}/viewSensor`, (req, res) => {
-    console.log('view sensors');
-    client.query('SELECT * FROM sensor')
+/* UTILISATEUR */
+
+// connexion
+app.post(`/${xembee}/login`, (req, res) => {
+    const mail = req.body.mail;
+    const pwd = req.body.password;
+    try {
+        client.query('select utilisateur.* from utilisateur where utilisateur.mail = $1 and utilisateur.password = $2', [mail, pwd], (err, result) => {
+            if (err) {
+                console.error('Error executing query', err);
+                return;
+            }
+            const users = result.rows.map((row) => {
+                const user = {
+                    id: row.id,
+                    mail: row.mail,
+                    nom: row.nom,
+                    prenom: row.prenom,
+                    adresse: row.adresse
+                }
+                return user;
+            });
+
+            res.status(200).send(users);
+        });
+
+
+    } catch (error) {
+        console.error('Erreur lors de la connexion :', error);
+        res.status(500).send('Erreur lors de la connexion, vérifiez votre mail ou mot de passe');
+    }
+})
+
+// inscription
+app.post(`/${xembee}/signup`, (req, res) => {
+
+    const num = client.query('select utilisateur.id from utilisateur order by utilisateur.id desc limit 1')
         .then((result) => {
             console.log('Query Result:', result.rows);
             res.status(200).send(result.rows);
@@ -36,7 +69,22 @@ app.get(`/${xembee}/viewSensor`, (req, res) => {
             console.error('Error executing query:', err);
             res.status(500).send(err);
         });
+
+    // const values = [
+    //     req.body.mail,
+    //     req.body.nom,
+    //     req.body.prenom,
+    //     req.body.password,
+    //     req.body.adresse
+    // ];
+
+    // client.query('INSERT INTO utilisateur(mail, nom, prenom, password, adresse) VALUES($1, $2, $3, $4, $5)', values)
+    //     .then(() => console.log('Values added successfully'))
+    //     .catch((err) => console.error('Error while adding values:', err));
+    // res.status(200).send('Values added successfully');
 })
+
+/* MODULES */
 
 // selection de tous les modules
 app.get(`/${xembee}/getAllModules`, (req, res) => {
@@ -236,6 +284,22 @@ app.post(`/${xembee}/upload`, upload.single('file'), (req, res) => {
         res.status(400).send('Aucun fichier n\'a été envoyé.');
     }
 });
+
+// CONNEXION AVEC L'ANCIENNE BD
+
+// Test affichage données dans la BD
+// app.get(`/${xembee}/viewSensor`, (req, res) => {
+//     console.log('view sensors');
+//     client.query('SELECT * FROM sensor')
+//         .then((result) => {
+//             console.log('Query Result:', result.rows);
+//             res.status(200).send(result.rows);
+//         })
+//         .catch((err) => {
+//             console.error('Error executing query:', err);
+//             res.status(500).send(err);
+//         });
+// })
 
 // app.get(`/${xembee}/sensor`, (req, res) => {
 //     console.log('hello sensor');
