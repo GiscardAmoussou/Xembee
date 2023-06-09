@@ -59,29 +59,34 @@ app.post(`/${xembee}/login`, (req, res) => {
 
 // inscription
 app.post(`/${xembee}/signup`, (req, res) => {
-
-    const num = client.query('select utilisateur.id from utilisateur order by utilisateur.id desc limit 1')
+    client.query('SELECT id FROM utilisateur ORDER BY id DESC LIMIT 1')
         .then((result) => {
-            console.log('Query Result:', result.rows);
-            res.status(200).send(result.rows);
+            const lastId = result.rows[0].id;
+            const newId = lastId + 1;
+
+            const values = [
+                newId,
+                req.body.mail,
+                req.body.nom,
+                req.body.prenom,
+                req.body.password,
+                req.body.adresse
+            ];
+
+            client.query('INSERT INTO utilisateur(id, mail, nom, prenom, password, adresse) VALUES($1, $2, $3, $4, $5, $6)', values)
+                .then(() => {
+                    console.log('Values added successfully');
+                    res.status(200).send('Values added successfully');
+                })
+                .catch((err) => {
+                    console.error('Error while adding values:', err);
+                    res.status(500).send(err);
+                });
         })
         .catch((err) => {
             console.error('Error executing query:', err);
             res.status(500).send(err);
         });
-
-    // const values = [
-    //     req.body.mail,
-    //     req.body.nom,
-    //     req.body.prenom,
-    //     req.body.password,
-    //     req.body.adresse
-    // ];
-
-    // client.query('INSERT INTO utilisateur(mail, nom, prenom, password, adresse) VALUES($1, $2, $3, $4, $5)', values)
-    //     .then(() => console.log('Values added successfully'))
-    //     .catch((err) => console.error('Error while adding values:', err));
-    // res.status(200).send('Values added successfully');
 })
 
 /* MODULES */
