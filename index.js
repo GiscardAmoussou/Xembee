@@ -241,7 +241,7 @@ app.get(`/${xembee}/getModules/:userId`, (req, res) => {
 // Afficher les KPI des modules dans la base de données
 app.get(`/${xembee}/viewModuleKPI`, (req, res) => {
     console.log('View module KPIs');
-    client.query('SELECT * FROM statistics')
+    client.query('SELECT * FROM statistiques')
         .then((result) => {
             console.log('Query Result:', result.rows);
             res.status(200).send(result.rows);
